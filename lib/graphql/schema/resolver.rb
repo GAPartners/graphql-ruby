@@ -91,7 +91,7 @@ module GraphQL
                 # then use the early return value instead of continuing
                 if early_return
                   if authorized_result == false
-                    early_return
+                    raise GraphQL::UnauthorizedError, early_return
                   else
                     raise "Unexpected result from #authorized? (expected `true`, `false` or `[false, {...}]`): [#{authorized_result.inspect}, #{early_return.inspect}]"
                   end
@@ -103,7 +103,7 @@ module GraphQL
                     public_send(self.class.resolve_method)
                   end
                 else
-                  nil
+                  raise GraphQL::UnauthorizedError, ''
                 end
               end
             end
@@ -139,19 +139,7 @@ module GraphQL
       # @raise [GraphQL::UnauthorizedError] To signal an authorization failure
       # @return [Boolean, early_return_data] If `false`, execution will stop (and `early_return_data` will be returned instead, if present.)
       def authorized?(**inputs)
-        self.class.arguments.each_value do |argument|
-          arg_keyword = argument.keyword
-          if inputs.key?(arg_keyword) && !(arg_value = inputs[arg_keyword]).nil? && (arg_value != argument.default_value)
-            arg_auth, err = argument.authorized?(self, arg_value, context)
-            if !arg_auth
-              return arg_auth, err
-            else
-              true
-            end
-          else
-            true
-          end
-        end
+        raise GraphQL::ExecutionError, "authorized? needs to be implemented for this call"
       end
 
       private
